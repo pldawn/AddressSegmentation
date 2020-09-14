@@ -1,0 +1,38 @@
+lstf_crf模型，用于地址标准化任务，版本V4，由6074条样本训练
+
+recognizer.py是主程序，py2.7环境运行，调用格式如下：
+
+python2 recognizer.py --inputs='太阳宫中路8号冠捷大厦3层302Boss直聘' --predict_mode=0(default)/1
+
+    省缺inputs参数为测试模式，输出测试输入的分析结果；省缺predict_mode参数为使用crf_frozen_ckpt.pb模型，其他参数均可指定，详情见recognizer.py
+
+返回解析的字符串如下：
+
+[STREET 太/B-STREET 阳/I-STREET 宫/I-STREET 中/I-STREET 路/E-STREET] [STREETNUM 8/B-STREETNUM 号/E-STREETNUM] [LANDMARK 冠/B-LANDMARK 捷/I-LANDMARK 大/I-LANDMARK 厦/E-LANDMARK] [FLOOR 3/B-FLOOR 层/E-FLOOR] [TABLET 3/B-TABLET 0/I-TABLET 2/I-TABLET B/I-TABLET o/I-TABLET s/I-TABLET s/I-TABLET 直/I-TABLET 聘/E-TABLET]
+
+识别出来的实体由[]标识，[]内第一个字符串是该实体的类别，后面每个字符串表示该实体包括的字/标签；未识别的实体在[]之外，表示两种情况：1、错误标记，2、正确标记'O'标签
+
+
+文件结构:
+root
+├── recognier.py                    // main script, containing all configurations in the head
+├── common                          // site-packages
+│   ├── bilstm.py                      // bilstm impletation
+│   ├── crf_frozen_graph.py            // prediction script by crf_frozen_ckpt.pb
+│   ├── generate_prediction.py         // mapping segmented characters to features
+│   ├── modify_conditions.py           // quering prior conditions of labels 
+│   ├── sentence.py                    // assisting to map segmented characters to features
+│   ├── tag_merge.py                   // decoding output of prediction into standard output
+│   └── viterbi_frozen_graph.py        // prediction script by viterbi_frozen_ckpt.pb
+├── lib                             // assistance tools
+│   ├── prior_conditions.txt           // prior conditions dictory of labels
+│   └── vec.txt                        // words embedding model, traind by word2vec, sampling from People's daily Feb.- Apr. 2014
+├── model                           // trained models
+│   ├── crf_frozen_ckpt.pb            // model with rewritten crf decode function, setting 'predict_mode' = '0' to use it, default
+│   └── viterbi_frozen_ckpt.pb        // model with rewritten viterbi decode function, setting 'predict_mode' = '1' to use it
+└── utils                           // rewritten tensorflow source codes (key words: '_with_conditions')
+    ├── crf_rewrite_crf.py             // containing rewritten crf decode, replace `tensorflow/contrib/crf/python/ops/crf.py` and rename
+    ├── crf_rewrite_viterbi.py         // containing rewritten viterbi decode, replace `tensorflow/contrib/crf/python/ops/crf.py` and rename
+    ├── __init__.py                    // containing new import statement, replace `tensorflow/contrib/crf/__init__.py`
+    └── rnn_rewrite_crf.py             // containing rewritten dynamic rnn and rnn loop, replace `tensorflow/python/ops/rnn.py` and rename
+
